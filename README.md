@@ -1,4 +1,4 @@
-# ALPR-IndonesiaPlateNumber
+# ALPR-ayoti
 Automatic License Plate Recognition for Indonesia Plate Number<br>
 
 ## Methods
