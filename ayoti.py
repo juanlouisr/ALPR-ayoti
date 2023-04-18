@@ -4,9 +4,7 @@ import os
 import requests
 import redis
 from pprint import pprint
-from flask import abort, Request, jsonify
-
-
+from flask import Request, jsonify
 
 r_host = os.environ.get('R_HOST')
 r_port = os.environ.get('R_PORT')
@@ -28,7 +26,7 @@ def plate_recognizer(plate: str):
     response_json = response.json()
 
     pprint(response_json)
-    plate_number = response_json['results'][0]['plate']
+    plate_number = response_json['results'][0]['plate'] if len(response_json['results']) > 0 else None
     return plate_number
 
 
@@ -36,17 +34,20 @@ def validate_plate(request: Request):
     api_key = os.environ.get('API_KEY')
 
     if not api_key:
-        abort(500, 'Internal server error')
+        return jsonify({'error': 'internal server error'}), 500
 
     if request.headers.get('X-API-KEY') != api_key:
-        abort(401, 'Unauthorized - Incorrect token')
+        return jsonify({'error': 'unauthorized'}), 401
 
     request_json = request.get_json()
 
     if not request_json and not 'data' in request_json:
-        abort(400, 'Bad Request, missing data')
+        return jsonify({'error': 'missing data'}), 400
 
     plate_number = plate_recognizer(request_json['data'])
+
+    if not plate_number:
+        return jsonify({'error': 'no plate detected'}), 400
 
     status = r.get(plate_number)
 
